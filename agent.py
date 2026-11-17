@@ -44,10 +44,18 @@ def call_tool(name, args):
         return f'도구 오류: {e}'
 
 
+# 비자·알바 같은 질문은 틀리면 위험해서 모델이 검색을 빼먹어도 코드가 먼저 검색함
+RISKY_WORDS = ['알바', '아르바이트', '시간제취업', '비자', '체류', '출입국']
+
+
 def run_agent(question, history=None, max_rounds=5):
     messages = [{'role': 'system', 'content': SYSTEM}] + (history or []) + \
                [{'role': 'user', 'content': question}]
     log = []
+    if any(w in question for w in RISKY_WORDS):
+        result = search_notice(question)
+        log.append(f'[안전 규칙] search_notice({question!r}) -> {result[:200]}')
+        messages.append({'role': 'user', 'content': '아래 공지 검색 결과만 근거로 답해.\n' + result})
     for _ in range(max_rounds):   # 무한 루프 방지
         resp = ollama.chat(model=MODEL, messages=messages, tools=list(TOOLS.values()),
                            options={'temperature': 0})
