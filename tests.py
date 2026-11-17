@@ -1,4 +1,4 @@
-"""테스트 4개를 실행하고 도구 호출 로그를 출력한다:  python tests.py"""
+# 테스트 4개 돌리고 로그 확인:  python tests.py
 from agent import run_agent
 
 TESTS = [

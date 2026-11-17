@@ -20,7 +20,7 @@
 ### 1) 학교 GPU 서버 (최종 시연)
 
 ```bash
-ollama list                         # qwen2.5:7b 확인, 없으면: ollama pull qwen2.5:7b
+ollama list                         # qwen2.5:14b 확인, 없으면: ollama pull qwen2.5:14b
 git clone https://github.com/<ID>/student-helper-agent.git
 cd student-helper-agent
 pip install --user -r requirements.txt
@@ -35,7 +35,7 @@ python app.py                       # 출력되는 gradio.live 주소로 접속
 
 | 환경 변수 | 기본값 | 설명 |
 | --- | --- | --- |
-| `MODEL` | `qwen2.5:7b` | Ollama 모델 |
+| `MODEL` | `qwen2.5:14b` | Ollama 모델 |
 | `TODAY` | `2026-11-19` | 시연용 기준일. `today`로 하면 오늘 날짜 |
 | `OLLAMA_HOST` | (Ollama 기본값) | 서버의 Ollama 주소가 다를 때 |
 

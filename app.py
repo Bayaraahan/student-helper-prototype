@@ -3,7 +3,7 @@ from agent import run_agent
 
 
 def to_text(content):
-    """Gradio 버전에 따라 메시지 내용이 문자열 또는 리스트로 온다 → 글자만 꺼낸다."""
+    # gradio 버전마다 content가 str이거나 list라서
     if isinstance(content, str):
         return content
     if isinstance(content, list):
@@ -13,7 +13,7 @@ def to_text(content):
 
 def respond(message, chat_history):
     history = [{'role': m['role'], 'content': to_text(m['content'])}
-               for m in chat_history][-6:]                # 최근 3번 대화만 기억
+               for m in chat_history][-6:]   # 최근 3턴만
     answer, log = run_agent(message, history)
     chat_history = chat_history + [{'role': 'user', 'content': message},
                                    {'role': 'assistant', 'content': answer}]
@@ -22,9 +22,9 @@ def respond(message, chat_history):
 
 def make_chatbot():
     try:
-        return gr.Chatbot(type='messages', height=480)   # Gradio 4~5
+        return gr.Chatbot(type='messages', height=480)   # gradio 5
     except TypeError:
-        return gr.Chatbot(height=480)                    # Gradio 6 (messages 형식이 기본)
+        return gr.Chatbot(height=480)   # gradio 6은 type 인자 없음
 
 
 with gr.Blocks(title='유학생 학사 도우미') as demo:

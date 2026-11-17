@@ -18,12 +18,11 @@ SYSTEM = """너는 한국어가 서툰 신입 유학생을 돕는 학사 도우�
 7. 답 끝에 '근거: (공지 제목) / 담당: (부서)'를 한 줄로 적는다. 도구 이름은 답변에 쓰지 않는다.
 8. 개인정보(외국인등록번호, 여권번호 등)는 묻지도 저장하지도 않는다."""
 
-# 모델이 도구 호출을 '글자'로 써 버리는 경우: search_notice({"query": "..."})
+# qwen이 가끔 도구 호출을 그냥 글자로 출력해서 따로 처리함
 TEXT_CALL = re.compile(r'(search_notice|days_until)\s*\(\s*(.*?)\s*\)\s*$', re.S)
 
 
 def parse_text_call(content):
-    """답변 글자 속의 도구 호출을 찾아 (이름, 인자)로 바꾼다. 없으면 None."""
     m = TEXT_CALL.search((content or '').strip())
     if not m:
         return None
@@ -41,31 +40,30 @@ def call_tool(name, args):
     fn = TOOLS.get(name)
     try:
         return fn(**args) if fn else f'알 수 없는 도구: {name}'
-    except Exception as e:                           # 도구 오류로 프로그램이 멈추지 않게
+    except Exception as e:   # 도구에서 에러 나도 멈추지 않게
         return f'도구 오류: {e}'
 
 
 def run_agent(question, history=None, max_rounds=5):
-    """질문 하나를 처리하고 (최종 답변, 도구 호출 로그)를 돌려준다."""
     messages = [{'role': 'system', 'content': SYSTEM}] + (history or []) + \
                [{'role': 'user', 'content': question}]
     log = []
-    for _ in range(max_rounds):                      # 무한 반복 방지
+    for _ in range(max_rounds):   # 무한 루프 방지
         resp = ollama.chat(model=MODEL, messages=messages, tools=list(TOOLS.values()),
-                           options={'temperature': 0})   # 매번 같은 결과가 나오도록
+                           options={'temperature': 0})
         msg = resp.message
         calls = [(c.function.name, dict(c.function.arguments or {})) for c in (msg.tool_calls or [])]
         if not calls:
             text_call = parse_text_call(msg.content)
-            if not text_call:                        # 도구가 필요 없으면 최종 답변
+            if not text_call:   # 도구 안 쓰면 그게 최종 답변
                 return msg.content, log
             calls = [text_call]
-            log.append('⚠️ 모델이 도구 호출을 글자로 써서 코드가 실제 호출로 바꿈')
+            log.append('[변환] 글자로 나온 도구 호출을 실제 호출로 바꿈')
             msg = {'role': 'assistant', 'content': msg.content}
         messages.append(msg)
         for name, args in calls:
             result = call_tool(name, args)
-            log.append(f'🔧 {name}({args}) → {str(result)[:200]}')
+            log.append(f'[도구] {name}({args}) -> {str(result)[:200]}')
             messages.append({'role': 'tool', 'content': str(result), 'tool_name': name})
     return '죄송합니다. 답을 끝내지 못했습니다. 국제교류팀에 문의하세요.', log
 

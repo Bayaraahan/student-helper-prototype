@@ -4,7 +4,7 @@ from config import DATA_DIR, EMBED_MODEL
 
 
 def load_notices(folder=DATA_DIR):
-    """공지 파일 하나 = Document 하나. 맨 위 '키: 값' 줄들은 metadata가 된다."""
+    # 공지 1개 = Document 1개, 위쪽 "키: 값" 줄은 metadata로
     docs = []
     for path in sorted(Path(folder).glob('*.md')):
         head, body = path.read_text(encoding='utf-8').split('\n\n', 1)
@@ -20,7 +20,7 @@ def build_retriever(k=3):
     from langchain_community.vectorstores import FAISS
 
     splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
-    chunks = splitter.split_documents(load_notices())   # 조각마다 제목·마감일 metadata 유지
+    chunks = splitter.split_documents(load_notices())   # 잘라도 metadata는 그대로 따라감
     embeddings = HuggingFaceEmbeddings(model_name=EMBED_MODEL,
                                        encode_kwargs={'normalize_embeddings': True})
     db = FAISS.from_documents(chunks, embeddings)
@@ -47,7 +47,7 @@ def format_hits(hits):
 
 def search_notice(query: str) -> str:
     """학교 공지와 학사 규정에서 질문과 관련된 내용을 검색한다.
-    장학금, 수강신청, 계절학기, 졸업요건, 증명서 발급, 기숙사, 아르바이트(시간제취업), 마감일 질문에 사용한다.
+    장학금, 수강신청, 계절학기, 졸업요건, 증명서 발급, 기숙사, 알바·아르바이트(시간제취업), 마감일 질문에 사용한다.
     날짜 계산에는 사용하지 않는다.
 
     Args:
