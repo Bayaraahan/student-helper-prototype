@@ -30,14 +30,19 @@ def build_retriever(k=3):
 _retriever = None
 
 
+def format_hit(d):
+    deadline = d.metadata.get('마감일')
+    hint = (f"→ 남은 날짜가 필요하면 days_until('{deadline}')을 호출할 것" if deadline
+            else '→ 이 공지에는 마감일이 없음. 날짜를 추측하지 말 것')
+    return (f"[{d.metadata.get('제목', d.metadata['source'])}] "
+            f"마감일: {deadline or '공지에 없음'} / 담당: {d.metadata.get('담당', '공지에 없음')}\n"
+            f"{hint}\n{d.page_content}")
+
+
 def format_hits(hits):
     if not hits:
         return '검색 결과 없음'
-    return '\n\n'.join(
-        f"[{d.metadata.get('제목', d.metadata['source'])}] "
-        f"마감일: {d.metadata.get('마감일', '공지에 없음')} / 담당: {d.metadata.get('담당', '공지에 없음')}\n"
-        f"{d.page_content}"
-        for d in hits)
+    return '\n\n'.join(format_hit(d) for d in hits)
 
 
 def search_notice(query: str) -> str:
